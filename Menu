@@ -1,0 +1,151 @@
+package com.menustatck;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Stack;
+
+public class MenuStack {
+
+    public static void main(String[] args) {
+        // TODO Auto-generated method stub
+        new MenuStack().Procesar();
+    }
+
+    public void Procesar() {
+
+        // Clase que representa una opción del menu
+        // Solo soporta navegación   entre menús.
+        class MenuItem {
+            int opcion; // Opcion que el usuario debe ingresar
+            String titulo; // Descripción de la opción
+            int menuSgte; // Indice del menu (listaMenu) que debe mostrarse 
+            public MenuItem(int opcion, String titulo, int menuSgte) {
+                this.opcion = opcion;
+                this.titulo = titulo;
+                this.menuSgte = menuSgte;
+            }
+        };
+
+        // Menú de opciones 
+        class Menu {
+            Scanner _in = new Scanner(System. in ); // Lectura desde consola.
+            int selected;
+            String titulo; // titulo del menu en la parte superior
+            Boolean esSubMenu; // Si es verdadero, entonces, este no es el principal.
+            List < MenuItem > menuItems = null; // Lista de opciones que mostrará este menu-
+            public Menu(String titulo, Boolean esSubMenu, MenuItem[] menuItems) {
+                this.titulo = titulo;
+                this.menuItems = new ArrayList < MenuItem > ();
+                this.menuItems.addAll(Arrays.asList(menuItems));
+                this.esSubMenu = esSubMenu;
+                if (esSubMenu) {
+                    this.menuItems.add(new MenuItem(6, "Regresar", 0));
+                }
+                this.menuItems.add(new MenuItem(7, "Salir", 0));
+            }
+
+            public MenuItem mostrarMenu() {
+                System.out.println();
+                System.out.println("**** " + this.titulo + "******");
+                System.out.println();
+                System.out.println("--------------------------------------------------------------------");
+                this.menuItems.forEach(item - >System.out.printf("%d. %s\n", item.opcion, item.titulo));
+                System.out.println("--------------------------------------------------------------------");
+                MenuItem menuSelected = null;
+                do {
+                    System.out.print(" Opción ? ");
+                    this.selected = _in.nextInt();
+                    try {
+                        menuSelected = menuItems.stream().filter(mi - >mi.opcion == this.selected).findFirst().get();
+                    }
+                    catch(Exception e) {
+                        System.out.println("Opcion inválida!");
+                    }
+                } while ( menuSelected == null );
+
+                return menuSelected;
+            }
+        }
+
+        /* Menus */
+
+        final Menu[] listaMenus = new Menu[] {
+            new Menu("Menu Principal", false, new MenuItem[] {
+                new MenuItem(1, "Opcion 1", 1
+                /* Va al Menu Opcion 1*/
+                ),
+                new MenuItem(2, "Opcion 2", 2
+                /* Va al Menu Opcion 2 */
+                )
+            }),
+            new Menu("Menu Opcion 1", true, new MenuItem[] {
+                new MenuItem(3, "Opcion 3", 3
+                /* Va al Menu Opcion 3 */
+                ),
+                new MenuItem(5, "Opcion 5", 5
+                /*  Va al Menu Opcion 3*/
+                )
+            }),
+            new Menu("Menu Opcion 2", true, new MenuItem[] {
+                new MenuItem(5, "Opcion 5", 5
+                /*  Va al Menu Opcion 5*/
+                )
+            }),
+            new Menu("Menu Opcion 3", true, new MenuItem[] {
+                new MenuItem(4, "Opcion 4", 4
+                /*  Va al Menu Opcion 4*/
+                )
+            }),
+            new Menu("Menu Opcion 4", true, new MenuItem[] {
+                new MenuItem(5, "Opcion 5", 0
+                /* No hace nada  */
+                )
+            }),
+            new Menu("Menu Opcion 5", true, new MenuItem[] {
+                new MenuItem(3, "Opcion 3", 3
+                /*  Va al Menu Opcion 3*/
+                )
+            })
+        };
+
+        // Pila para ir colocando los menus por donde vamos pasando
+        Stack < Menu > st = new Stack < Menu > ();
+
+        // Inicia con el menu principal
+        Menu menuActual = listaMenus[0];
+
+        MenuItem opcion = null;
+
+        do {
+            //  Mostrar menu y retornar el menuitem seleccionado
+            opcion = menuActual.mostrarMenu();
+            // retroce al menu anterior si no estamos en el menu principal
+            if (opcion.opcion == 6 && menuActual.esSubMenu) {
+                // Recupera el menu anterior del stack y lo pone como activo
+                menuActual = st.pop();
+            }
+            else if (opcion.opcion != 7) {
+                // Para cualquier opción que tenga que navegar a otro menu
+                if (opcion.menuSgte != 0) {
+                    // Antes de activar el nuevo menu  
+                    // Guardo  éste en el stack
+                    st.push(menuActual);
+                    // Obtengo el nuevo menú que será el menu activo
+                    menuActual = listaMenus[opcion.menuSgte];
+                }
+            }
+            else {
+                // Si es 7 y es un sub menu retorna al menu principal
+                if (menuActual.esSubMenu) {
+                    menuActual = listaMenus[0];
+                    opcion.opcion = 0;
+                    // Limpia stack porque estamos en el menu principal
+                    st.clear();;
+                }
+            }
+        } while ( opcion . opcion != 7 );
+
+    }
+}
